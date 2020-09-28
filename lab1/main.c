@@ -14,9 +14,9 @@ void print_lines(char *line) {
 
 void exit_error(int err_code) {
     char buff[256];
-    strerror_r(err_code, buff, sizeof(buf));
-        
-    fprintf(stderr, "%s: creating thread: %s\n", argv[0], buff);
+    strerror_r(err_code, buff, sizeof(buff));
+
+    fprintf(stderr, "%s: creating thread: %s\n", buff);
 
     exit(ERROR_TREAD_CREATE);
 }
@@ -35,10 +35,10 @@ int main(int argc, char *argv[]) {
     if (err_code != SUCCESS) {
         exit_error(err_code);
     }
-    
+
     print_lines("Parent\n");
-    
-    
-    pthread_exit(NULL);  
+
+
+    pthread_exit(NULL);
     return (EXIT_SUCCESS);
 }
