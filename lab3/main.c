@@ -18,7 +18,7 @@ void *thread_body(void *param) {
 }
 
 void exit_error(int err_code, char *message, int err_returns) {
-    char buff[256];
+    char buff[BUFSIZE];
     strerror_r(err_code, buff, sizeof(buff));
 
     fprintf(stderr, "%s: creating thread: %s\n", buff);
