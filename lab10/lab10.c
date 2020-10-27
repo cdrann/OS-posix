@@ -41,9 +41,21 @@ void *thread_body(void *param) {
 }
 
 int main(int argc, char *argv[]) {
-    pthread_mutex_init(&mutex_1, NULL);
-    pthread_mutex_init(&mutex_2, NULL);
-    pthread_mutex_init(&mutex_3, NULL);
+    pthread_mutexattr_t attr_1;
+    pthread_mutexattr_t attr_2;
+    pthread_mutexattr_t attr_3;
+
+    pthread_mutexattr_init(&attr_1);
+    pthread_mutexattr_init(&attr_2);
+    pthread_mutexattr_init(&attr_3);
+
+    pthread_mutexattr_settype(&attr_1, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutexattr_settype(&attr_2, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutexattr_settype(&attr_3, PTHREAD_MUTEX_ERRORCHECK);
+
+    pthread_mutex_init(&mutex_1, &attr_1);
+    pthread_mutex_init(&mutex_2, &attr_2);
+    pthread_mutex_init(&mutex_3, &attr_3);
 
     pthread_t thread;
 
@@ -61,13 +73,11 @@ int main(int argc, char *argv[]) {
         printf("String %i from parent\n", i);
 
         pthread_mutex_unlock(&mutex_2);
-
         pthread_mutex_lock(&mutex_1);
 
         pthread_mutex_unlock(&mutex_3);
 
         pthread_mutex_lock(&mutex_2);
-
         pthread_mutex_unlock(&mutex_1);
     }
     
