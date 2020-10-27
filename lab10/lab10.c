@@ -74,6 +74,13 @@ void errorcheck_mutex_init(pthread_mutex_t* mutex) {
     }
 }
 
+void create_thread(pthread_t *thread, pthread_attr_t *attr, void *func, void *arg) {
+    int err_code = pthread_create(thread, attr, func, arg);
+    if (err_code != SUCCESS) {
+        exit_error(err_code, "%s: error creating thread", ERROR_TREAD_CREATE);
+    }
+}
+
 void *thread_body(void *param) {
     mutex_lock(&mutex_1);
 
@@ -96,11 +103,7 @@ int main(int argc, char *argv[]) {
     errorcheck_mutex_init(&mutex_3);
 
     pthread_t thread;
-
-    int err_code = pthread_create(&thread, NULL, thread_body, NULL);
-    if (err_code != SUCCESS) {
-        exit_error(err_code, "%s: error creating thread", ERROR_TREAD_CREATE);
-    }
+    create_thread(&thread, NULL, &thread_body, NULL);
 
     mutex_lock(&mutex_2);
 
