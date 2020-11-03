@@ -101,10 +101,10 @@ int main(int argc, char *argv[]) {
     errorcheck_mutex_init(&mutex_2);
     errorcheck_mutex_init(&mutex_3);
 
+    mutex_lock(&mutex_2);
+
     pthread_t thread;
     create_thread(&thread, NULL, &thread_body, NULL);
-
-    mutex_lock(&mutex_2);
 
     sleep(1);
 
