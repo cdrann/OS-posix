@@ -71,7 +71,7 @@ void errorcheck_mutex_init(pthread_mutex_t* mutex) {
     }
 }
 
-void create_thread(pthread_t *thread, pthread_attr_t *attr, void *func, void *arg) {
+void create_thread(pthread_t *thread, pthread_attr_t *attr, void* func (void *), void *arg) {
     int err_code = pthread_create(thread, attr, func, arg);
     if (err_code != SUCCESS) {
         exit_error(err_code, "%s: error creating thread", ERROR_TREAD_CREATE);
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     mutex_lock(&mutex_2);
 
     sleep(1);
-    
+
     for(int i = 0; i < NUM_PARENT_LINES; ++i) {
         mutex_lock(&mutex_3);
         printf("String %i from parent\n", i);
