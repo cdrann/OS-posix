@@ -21,7 +21,6 @@ pthread_mutex_t mutex_3;
 #define NUM_PARENT_LINES 10
 #define NUM_CHILD_LINES 10
 
-
 void exit_error(int err_code, char *message, int err_returns) {
     char buff[256];
     strerror_r(err_code, buff, sizeof(buff));
@@ -38,14 +37,12 @@ void mutex_lock(pthread_mutex_t* mutex) {
     }
 }
 
-
 void mutex_unlock(pthread_mutex_t* mutex) {
     int err_code = pthread_mutex_unlock(mutex);
     if(err_code != SUCCESS) {
         exit_error(err_code, "%s: cannot unlock mutex", ERROR_MUTEX_UNLOCK);
     }
 }
-
 
 void mutex_destroy(pthread_mutex_t* mutex) {
     int err_code;
@@ -94,6 +91,8 @@ void *thread_body(void *param) {
         mutex_unlock(&mutex_3);
     }
 
+    mutex_unlock(&mutex_1);
+
     return NULL;
 }
 
@@ -107,6 +106,8 @@ int main(int argc, char *argv[]) {
 
     mutex_lock(&mutex_2);
 
+    sleep(1);
+    
     for(int i = 0; i < NUM_PARENT_LINES; ++i) {
         mutex_lock(&mutex_3);
         printf("String %i from parent\n", i);
@@ -116,6 +117,8 @@ int main(int argc, char *argv[]) {
         mutex_lock(&mutex_2);
         mutex_unlock(&mutex_1);
     }
+
+    mutex_unlock(&mutex_2);
 
     mutex_destroy(&mutex_1);
     mutex_destroy(&mutex_2);
