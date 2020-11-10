@@ -4,7 +4,7 @@
 #include <string.h>
 
 pthread_mutex_t mtx;
-pthread_cond_t accessAvailable;
+pthread_cond_t cond;
 
 #define SUCCESS 0
 
@@ -114,20 +114,20 @@ void *printLines(void *parameter) {
     mutex_lock(&mtx);
 
     for(int i = 0; i < NUM_LINES; i++) {
-        cond_signal(&accessAvailable);
+        cond_signal(&cond);
         printf("String %i from %s\n", i, threadName);
-        cond_wait(&accessAvailable, &mtx);
+        cond_wait(&cond, &mtx);
     }
 
     mutex_unlock(&mtx);
-    cond_signal(&accessAvailable);
+    cond_signal(&cond);
 }
 
 int main(int argc, char* argv[]) {
     pthread_t child;
 
     errorcheck_mutex_init(&mtx);
-    cond_init(&accessAvailable, NULL);
+    cond_init(&cond, NULL);
 
     create_thread(&child, NULL, printLines, (void *) "Child");
 
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     pthread_join(child, NULL);
 
     mutex_destroy(&mtx);
-    cond_destroy(&accessAvailable);
+    cond_destroy(&cond);
 
     pthread_exit(NULL);
 }
