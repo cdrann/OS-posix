@@ -80,8 +80,8 @@ void sem_destroy_(sem_t* sem) {
 int main(int argc, char* argv[]) {
     pthread_t child;
 
-    sem_init_(&sem1, 0, 0);
-    sem_init_(&sem2, 0, 1);
+    sem_init_(&sem1, 0, 1);
+    sem_init_(&sem2, 0, 0);
 
     create_thread(&child, NULL, childFunction, NULL);
 
