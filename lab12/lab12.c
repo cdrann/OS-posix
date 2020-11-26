@@ -9,6 +9,8 @@ pthread_cond_t cond;
 #define SUCCESS 0
 
 #define ERROR_TREAD_CREATE 1
+#define ERROR_THREAD_JOIN 16
+
 #define ERROR_MUTEXATTR_INIT 2
 #define ERROR_MUTEXATTR_SETTYPE 3
 #define ERROR_MUTEX_INIT 4
@@ -73,6 +75,13 @@ void errorcheck_mutex_init(pthread_mutex_t* mutex) {
     }
 }
 
+void pthread_join_(const pthread_t* pthread, void *attr) {
+    int err_code = pthread_join(*pthread, attr);
+    if (err_code != SUCCESS) {
+        exit_error(err_code, "%s: error pthread_join", ERROR_THREAD_JOIN);
+    }
+}
+
 void cond_init(pthread_cond_t* cond, pthread_condattr_t *attr) {
     int err_code = pthread_cond_init(cond, attr);
     if (err_code != SUCCESS) {
@@ -133,8 +142,8 @@ int main(int argc, char* argv[]) {
 
     printLines((void *) "Parent");
 
-    pthread_join(child, NULL);
-
+    pthread_join_(&child, NULL);
+    
     mutex_destroy(&mtx);
     cond_destroy(&cond);
 
