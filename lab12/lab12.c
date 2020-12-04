@@ -5,12 +5,11 @@
 
 pthread_mutex_t mtx;
 pthread_cond_t cond;
+int worked_first = 1;
 
 #define SUCCESS 0
 
 #define ERROR_TREAD_CREATE 1
-#define ERROR_THREAD_JOIN 16
-
 #define ERROR_MUTEXATTR_INIT 2
 #define ERROR_MUTEXATTR_SETTYPE 3
 #define ERROR_MUTEX_INIT 4
@@ -75,13 +74,6 @@ void errorcheck_mutex_init(pthread_mutex_t* mutex) {
     }
 }
 
-void pthread_join_(const pthread_t* pthread, void *attr) {
-    int err_code = pthread_join(*pthread, attr);
-    if (err_code != SUCCESS) {
-        exit_error(err_code, "%s: error pthread_join", ERROR_THREAD_JOIN);
-    }
-}
-
 void cond_init(pthread_cond_t* cond, pthread_condattr_t *attr) {
     int err_code = pthread_cond_init(cond, attr);
     if (err_code != SUCCESS) {
@@ -121,15 +113,19 @@ void *printLines(void *parameter) {
     char *threadName = (char *) parameter;
 
     mutex_lock(&mtx);
-
     for(int i = 0; i < NUM_LINES; i++) {
-        cond_signal(&cond);
-        printf("String %i from %s\n", i, threadName);
-        cond_wait(&cond, &mtx);
-    }
+        while (worked_first) {
+            cond_wait(&cond, &mtx);
+        }
 
+        printf("String %i from %s\n", i, threadName);
+
+        worked_first = 1;
+        cond_signal(&cond);
+    }
     mutex_unlock(&mtx);
-    cond_signal(&cond);
+
+    return NULL;
 }
 
 int main(int argc, char* argv[]) {
@@ -140,10 +136,21 @@ int main(int argc, char* argv[]) {
 
     create_thread(&child, NULL, printLines, (void *) "Child");
 
-    printLines((void *) "Parent");
+    mutex_lock(&mtx);
+    for(int i = 0; i < NUM_LINES; i++) {
+        while (!worked_first) {
+            cond_wait(&cond, &mtx);
+        }
 
-    pthread_join_(&child, NULL);
-    
+        printf("String %i from %s\n", i, "Parent");
+
+        worked_first = 0;
+        cond_signal(&cond);
+    }
+    mutex_unlock(&mtx);
+
+    pthread_join(child, NULL);
+
     mutex_destroy(&mtx);
     cond_destroy(&cond);
 
