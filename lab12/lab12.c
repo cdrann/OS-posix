@@ -5,11 +5,12 @@
 
 pthread_mutex_t mtx;
 pthread_cond_t cond;
-int worked_first = 1;
+int turnToWork = 0;
 
 #define SUCCESS 0
 
 #define ERROR_TREAD_CREATE 1
+#define ERROR_THREAD_JOIN 12
 #define ERROR_MUTEXATTR_INIT 2
 #define ERROR_MUTEXATTR_SETTYPE 3
 #define ERROR_MUTEX_INIT 4
@@ -23,6 +24,12 @@ int worked_first = 1;
 #define ERROR_COND_DESTROY 11
 
 #define NUM_LINES 10
+#define NUM_THREADS 2
+
+typedef struct someArgs_tag {
+    const char *threadName;
+    int id;
+} someArgs_t;
 
 void exit_error(int err_code, char *message, int err_returns) {
     char buff[256];
@@ -109,18 +116,25 @@ void create_thread(pthread_t *thread, pthread_attr_t *attr, void* func (void *),
     }
 }
 
-void *printLines(void *parameter) {
-    char *threadName = (char *) parameter;
+void pthread_join_(const pthread_t* pthread, void *attr) {
+    int err_code = pthread_join(*pthread, attr);
+    if (err_code != SUCCESS) {
+        exit_error(err_code, "%s: error pthread_join", ERROR_THREAD_JOIN);
+    }
+}
+
+void *printLines(void *params) {
+    someArgs_t* arg = (someArgs_t *) params;
 
     mutex_lock(&mtx);
     for(int i = 0; i < NUM_LINES; i++) {
-        while (worked_first) {
+        while (arg->id != turnToWork) {
             cond_wait(&cond, &mtx);
         }
 
-        printf("String %i from %s\n", i, threadName);
+        printf("String %i from %s\n", i, arg->threadName);
 
-        worked_first = 1;
+        turnToWork = (turnToWork + 1) % NUM_THREADS;
         cond_signal(&cond);
     }
     mutex_unlock(&mtx);
@@ -129,30 +143,22 @@ void *printLines(void *parameter) {
 }
 
 int main(int argc, char* argv[]) {
-    pthread_t child;
-
     errorcheck_mutex_init(&mtx);
     cond_init(&cond, NULL);
 
-    create_thread(&child, NULL, printLines, (void *) "Child");
-
-    mutex_lock(&mtx);
-    for(int i = 0; i < NUM_LINES; i++) {
-        while (!worked_first) {
-            cond_wait(&cond, &mtx);
-        }
-
-        printf("String %i from %s\n", i, "Parent");
-
-        worked_first = 0;
-        cond_signal(&cond);
+    someArgs_t args[NUM_THREADS];
+    const char *threadNames[] = {"Parent", "Child"};
+    for(int i = 0; i < NUM_THREADS; i++) {
+        args[i].id = i;
+        args[i].threadName = threadNames[i];
     }
-    mutex_unlock(&mtx);
+    pthread_t child;
 
-    pthread_join(child, NULL);
+    create_thread(&child, NULL, printLines, (void *) &args[1]);
+    printLines((void *)&args[0]);
 
+    pthread_join_(&child, NULL);
     mutex_destroy(&mtx);
     cond_destroy(&cond);
-
     pthread_exit(NULL);
 }
