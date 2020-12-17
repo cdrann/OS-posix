@@ -24,7 +24,7 @@ int turnToWork = 0;
 #define ERROR_COND_DESTROY 11
 
 #define NUM_LINES 10
-#define NUM_THREADS 2
+#define NUM_THREADS 3
 
 typedef struct someArgs_tag {
     const char *threadName;
@@ -146,18 +146,22 @@ int main(int argc, char* argv[]) {
     errorcheck_mutex_init(&mtx);
     cond_init(&cond, NULL);
 
+    pthread_t children[NUM_THREADS];
     someArgs_t args[NUM_THREADS];
-    const char *threadNames[] = {"Parent", "Child"};
+    const char *threadNames[] = {"Parent", "Child", "Child2"};
     for(int i = 0; i < NUM_THREADS; i++) {
         args[i].id = i;
         args[i].threadName = threadNames[i];
+        
+        if(i != 0) {
+            create_thread(&children[i - 1], NULL, printLines, (void *) &args[i]);
+        }
     }
-    pthread_t child;
-
-    create_thread(&child, NULL, printLines, (void *) &args[1]);
     printLines((void *)&args[0]);
 
-    pthread_join_(&child, NULL);
+    for(int i = 1; i < NUM_THREADS; i++) {
+        pthread_join_(&children[i], NULL);
+    }
     mutex_destroy(&mtx);
     cond_destroy(&cond);
     pthread_exit(NULL);
