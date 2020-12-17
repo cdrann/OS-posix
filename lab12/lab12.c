@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
     }
     printLines((void *)&args[0]);
 
-    for(int i = 1; i < NUM_THREADS; i++) {
+    for(int i = 0; i < NUM_THREADS - 1; i++) {
         pthread_join_(&children[i], NULL);
     }
     mutex_destroy(&mtx);
