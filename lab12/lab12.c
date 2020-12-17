@@ -22,6 +22,7 @@ int turnToWork = 0;
 #define ERROR_COND_SIGNAL 9
 #define ERROR_COND_WAIT 10
 #define ERROR_COND_DESTROY 11
+#define ERROR_COND_BROADCAST 13
 
 #define NUM_LINES 10
 #define NUM_THREADS 3
@@ -102,6 +103,13 @@ void cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex) {
     }
 }
 
+void cond_broadcast(pthread_cond_t* cond) {
+    int err_code = pthread_cond_broadcast(cond);
+    if (err_code != SUCCESS) {
+        exit_error(err_code, "%s: cond_wait error", ERROR_COND_BROADCAST);
+    }
+}
+
 void cond_destroy(pthread_cond_t* cond) {
     int err_code = pthread_cond_destroy(cond);
     if (err_code != SUCCESS) {
@@ -129,7 +137,7 @@ void *printLines(void *params) {
     mutex_lock(&mtx);
     for(int i = 0; i < NUM_LINES; i++) {
         while (arg->id != turnToWork) {
-            cond_wait(&cond, &mtx);
+            cond_broadcast(&cond);
         }
 
         printf("String %i from %s\n", i, arg->threadName);
