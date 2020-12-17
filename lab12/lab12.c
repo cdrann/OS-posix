@@ -137,7 +137,7 @@ void *printLines(void *params) {
     mutex_lock(&mtx);
     for(int i = 0; i < NUM_LINES; i++) {
         while (arg->id != turnToWork) {
-            cond_wait(&cond, &mutex);
+            cond_wait(&cond, &mtx);
         }
 
         printf("String %i from %s\n", i, arg->threadName);
